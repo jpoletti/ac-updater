@@ -2,8 +2,8 @@ name: Daily Data Update
 
 on:
   schedule:
-    # This will run at 1:00 UTC every day (adjust the time as needed)
-    - cron: '0 1 * * *'
+    # This will run at 01:00 Buenos Aires Time Mon-Fri
+    - cron: '0 4 * * 1-5'
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
@@ -33,3 +33,27 @@ jobs:
     - name: Run update script
       run: |
         python main.py
+
+        - name: Slack Notification on Success
+      if: success()
+      uses: slackapi/slack-github-action@v1.24.0
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      with:
+        payload: |
+          {
+            "text": "✅ Daily data update succeeded for ${{ github.repository }}"
+          }
+    
+    - name: Slack Notification on Failure
+      if: failure()
+      uses: slackapi/slack-github-action@v1.24.0
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      with:
+        payload: |
+          {
+            "text": "❌ Daily data update FAILED for ${{ github.repository }}"
+          }
